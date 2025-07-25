@@ -225,7 +225,19 @@ public function pull(Request $request)
 }
 
 
-
+public function backup($id)
+{
+    try {
+        $result = $this->docker->backupContainer($id);
+        if (isset($result['error'])) {
+            return back()->with('error', $result['error']);
+        }
+        return back()->with('success', 'Container backed up successfully!');
+    } catch (\Exception $e) {
+        Log::error("Failed to backup container $id: " . $e->getMessage());
+        return back()->with('error', 'Backup failed: ' . $e->getMessage());
+    }
+}
 
 
 

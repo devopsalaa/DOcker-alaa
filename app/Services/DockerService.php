@@ -4,6 +4,8 @@ namespace App\Services;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Support\Facades\Broadcast;
+
 
 class DockerService
 {
@@ -99,15 +101,18 @@ class DockerService
         ];
     }
 }
-    public function startContainer($id)
-    {
-        try {
-            $this->client->post('containers/'.$id.'/start');
-            return true;
-        } catch (GuzzleException $e) {
-            return false;
-        }
+   public function startContainer($containerId)
+{
+    try {
+        $this->client->post('containers/'.$containerId.'/start');
+        Broadcast::channel('containers', function () use ($containerId) {
+            return ['id' => $containerId, 'state' => 'running'];
+        });
+        return ['success' => true];
+    } catch (\Exception $e) {
+        return ['error' => $e->getMessage()];
     }
+}
 
     public function stopContainer($id)
     {
@@ -211,6 +216,23 @@ public function pullImage($image)
 }
 
 
+
+
+public function backupContainer($containerId)
+{
+    try {
+        $response = $this->client->post("containers/{$containerId}/commit", [
+            'query' => [
+                'repo' => 'backup-' . $containerId,
+                'tag' => 'latest'
+            ]
+        ]);
+        $image = json_decode($response->getBody(), true);
+        return ['success' => true, 'image' => $image];
+    } catch (\Exception $e) {
+        return ['error' => $e->getMessage()];
+    }
+}
 
 
 

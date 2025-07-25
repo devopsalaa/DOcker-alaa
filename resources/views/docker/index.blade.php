@@ -142,6 +142,7 @@
                     </svg>
                     Create Container
                 </button>
+
             </div>
 
             <div class="p-6">
@@ -253,6 +254,7 @@
                                             Delete
                                         </button>
                                     </form>
+
                                     <a href="{{ route('docker.logs', substr($container['Id'], 0, 12)) }}"
                                         class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -267,6 +269,15 @@
                                     </svg>
                                     Details
                                 </a>
+                                <form method="POST" action="{{ route('docker.backup', substr($container['Id'], 0, 12)) }}">
+                                @csrf
+                                <button type="submit" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                                    </svg>
+                                    Backup
+                                </button>
+                            </form>
                                 </td>
                             </tr>
                             @endforeach
@@ -364,7 +375,23 @@
             </div>
         </div>
     </div>
-
+<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+<script>
+    window.Echo = new Echo({
+        broadcaster: 'pusher',
+        key: '{{ env('PUSHER_APP_KEY') }}',
+        cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
+        forceTLS: true
+    });
+    Echo.channel('containers').listen('ContainerUpdated', (e) => {
+        const row = document.querySelector(`tr[data-id="${e.id}"]`);
+        if (row) {
+            const status = row.querySelector('.status');
+            status.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${e.state === 'running' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+            status.innerHTML = `<svg class="-ml-0.5 mr-1.5 h-2 w-2 ${e.state === 'running' ? 'text-green-500' : 'text-red-500'}" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" /></svg>${e.state}`;
+        }
+    });
+</script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Image selection

@@ -43,6 +43,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/docker/{id}/logs', [DockerController::class, 'logs'])->name('docker.logs');
     Route::get('/docker/{id}/details', [DockerController::class, 'details'])->name('docker.details');
     Route::post('/docker/images/pull', [DockerController::class, 'pull'])->name('docker.pull');
+    Route::post('/docker/{id}/backup', [DockerController::class, 'backup'])->name('docker.backup');
 });
 
 require __DIR__.'/auth.php';
